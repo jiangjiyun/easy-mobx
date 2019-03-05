@@ -5,11 +5,7 @@ import {
 import dependenceManger from '../src/my-dependence-manager';
 
 class Person {
-  @observable name;
   @observable car = [];
-  constructor(name) {
-    // this.name = name;
-  }
 }
 
 let person = new Person();
@@ -19,6 +15,7 @@ autorun(function(){
 });
 
 setTimeout(()=>{
+  console.log('修改car');
   person.car = [9];
 },400);
 

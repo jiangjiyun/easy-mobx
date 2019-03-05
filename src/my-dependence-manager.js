@@ -10,7 +10,10 @@ const dependenceManger = {
   _addObserver(obId) {
     this._store[obId] = this._store[obId] || {};
     this._store[obId].watchers = this._store[obId].watchers || [];
-    this._store[obId].watchers.push(nowObserver);
+    // 当一个函数中多次使用同一个observable，去重处理
+    if(this._store[obId].watchers.indexOf(nowObserver) === -1){
+      this._store[obId].watchers.push(nowObserver);
+    }
   },
 
   /**
