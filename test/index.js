@@ -1,23 +1,31 @@
 import autorun from '../src/my-autorun';
 import {
-  observable
+  observable,
+  computed
 } from '../src/my-decorator';
-import dependenceManger from '../src/my-dependence-manager';
 
 class Person {
-  @observable car = [];
+  @observable car = '单车';
+  @computed
+  get name() {
+    return 'mycar:' + this.car;
+  }
 }
 
 let person = new Person();
 
-autorun(function(){
-  console.log('car', person.car && person.car[0]);
+
+autorun(function () {
+  console.log('car', person.name)
+  console.log('name', person.name);
 });
 
-setTimeout(()=>{
+setTimeout(() => {
   console.log('修改car');
-  person.car = [9];
-},400);
+  person.car = '单车1';
+}, 200);
 
-
-window.dependenceManger = dependenceManger;
+setTimeout(() => {
+  console.log('修改car1');
+  person.car = '单车2';
+}, 400);

@@ -1,4 +1,6 @@
 import Observable from './my-observable';
+import Computed from './my-computed';
+import autorun from './my-autorun';
 import {
   createObservable
 } from './my-extendObservable';
@@ -26,7 +28,7 @@ function observable(target, key, descriptor) {
       return observable.get()
     },
     set(v) {
-      if(typeof v === 'object'){
+      if (typeof v === 'object') {
         createObservable(v);
       }
       observable.set(v);
@@ -34,6 +36,46 @@ function observable(target, key, descriptor) {
   }
 }
 
+/**
+ * 包装 computed 属性
+ * @param target
+ * @param key
+ * @param descriptor
+ * @returns {{enumerable: boolean, configurable: boolean, get: get, set: set}}
+ */
+function computed(target, key, descriptor) {
+  const getter = descriptor.get;
+  const computed = new Computed(getter);
+  return {
+    enumerable: true,
+    configurable: true,
+    get: function () {
+      computed.target = this;
+      return computed.get();
+    }
+  }
+}
+
+//对autorun进行封装处理，支持react
+const ReactMixin = {
+  componentWillMount: function () {
+    autorun(() => {
+      this.render();
+      this.forceUpdate();
+    });
+  }
+};
+
+function observer(target) {
+  const targetCWM = target.prototype.componentWillMount;
+  target.prototype.componentWillMount = function () {
+    targetCWM && targetCWM.call(this);
+    ReactMixin.componentWillMount.call(this);
+  };
+}
+
 export {
-  observable
+  observable,
+  computed,
+  observer
 };

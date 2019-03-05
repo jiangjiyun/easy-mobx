@@ -1,5 +1,7 @@
 const observerStack = [];
+const targetStack = [];
 let nowObserver = null;
+let nowTarget = null;
 let nowHandle = null;
 const dependenceManger = {
   /**
@@ -9,9 +11,10 @@ const dependenceManger = {
 
   _addObserver(obId) {
     this._store[obId] = this._store[obId] || {};
+    this._store[obId].target = nowTarget;
     this._store[obId].watchers = this._store[obId].watchers || [];
     // 当一个函数中多次使用同一个observable，去重处理
-    if(this._store[obId].watchers.indexOf(nowObserver) === -1){
+    if (this._store[obId].watchers.indexOf(nowObserver) === -1) {
       this._store[obId].watchers.push(nowObserver);
     }
   },
@@ -25,7 +28,7 @@ const dependenceManger = {
     if (ds && ds.watchers) {
       ds.watchers.forEach(observer => {
         nowHandle = observer;
-        observer();
+        ds.target ? observer.call(ds.target) : observer()
         nowHandle = null;
       })
     }
@@ -34,9 +37,11 @@ const dependenceManger = {
   /**
    * 开始收集依赖
    */
-  startCollect(observer) {
+  startCollect(observer, target) {
     observerStack.push(observer);
+    targetStack.push(target);
     nowObserver = observerStack[observerStack.length - 1];
+    nowTarget = targetStack[targetStack.length - 1];
   },
 
   /**
@@ -46,7 +51,7 @@ const dependenceManger = {
   collect(obId) {
     if (nowObserver) {
       this._addObserver(obId);
-    } else if (!this._store[obId] && nowHandle) { 
+    } else if (!this._store[obId] && nowHandle) {
       // 当Observable被访问时，但依赖关系不存在，则添加依赖
       nowObserver = nowHandle;
       this._addObserver(obId);
@@ -57,9 +62,13 @@ const dependenceManger = {
   /**
    * 依赖收集完成
    */
-  endCollect() {
+  endCollect(target) {
     observerStack.pop();
     nowObserver = observerStack.length > 0 ? observerStack[observerStack.length - 1] : null;
+    if (target) {
+      targetStack.pop();
+      nowTarget = targetStack.length > 0 ? targetStack[targetStack.length - 1] : null;
+    }
   },
 }
 
